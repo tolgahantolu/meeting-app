@@ -1,17 +1,24 @@
 import express from "express";
+import Boom from "@hapi/boom";
+import auth from "./routes/auth";
+
 const app = express();
 
 // middlewares
 app.use(express.json());
 
-app.post("/register", (req, res) => {
-  const input = req.body.input.data;
+app.use("/auth", auth);
 
-  console.log("input", input);
+app.use((req, res, next) => {
+  return next(Boom.notFound("Not found!"));
+});
 
-  res.json({
-    accessToken: "accessToken",
-  });
+app.use((err, req, res, next) => {
+  if (err?.output) {
+    return res.status(err.output.statusCode || 500).json(err.output.payload);
+  }
+
+  return res.status(500).json(err);
 });
 
 app.listen(4000, () => {
