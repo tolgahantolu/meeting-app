@@ -4,6 +4,7 @@ import bcrypt from "bcryptjs";
 import Hasura from "../../clients/hasura";
 import { IS_USER_EXIST, MUTATION_INSERT_USER } from "./queries";
 import { registerSchema } from "./validations";
+import { signAccessToken } from "./helpers";
 
 const router = express.Router();
 
@@ -35,16 +36,19 @@ router.post("/register", async (req, res, next) => {
     const salt = await bcrypt.genSalt(10);
     const hash = await bcrypt.hash(input.password, salt);
 
-    const user = await Hasura.request(MUTATION_INSERT_USER, {
-      input: {
-        ...input,
-        password: hash,
-      },
-    });
+    const { insert_mt_users_one: user } = await Hasura.request(
+      MUTATION_INSERT_USER,
+      {
+        input: {
+          ...input,
+          password: hash,
+        },
+      }
+    );
 
-    console.log(user);
+    const accessToken = await signAccessToken(user);
 
-    res.json({ accessToken: "accessToken" });
+    res.json({ accessToken });
   } catch (error) {
     return next(Boom.badRequest(error));
   }

@@ -12,7 +12,7 @@ export const MUTATION_INSERT_USER = gql`
   mutation insertUser($input: mt_users_insert_input!) {
     insert_mt_users_one(object: $input) {
       id
-      name
+      email
     }
   }
 `;

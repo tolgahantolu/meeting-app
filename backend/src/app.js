@@ -1,7 +1,9 @@
 import express from "express";
+import dotenv from "dotenv";
 import Boom from "@hapi/boom";
 import auth from "./routes/auth";
 
+dotenv.config();
 const app = express();
 
 // middlewares
