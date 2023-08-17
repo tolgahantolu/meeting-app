@@ -4,7 +4,7 @@ import bcrypt from "bcryptjs";
 import Hasura from "../../clients/hasura";
 import { IS_USER_EXIST, MUTATION_INSERT_USER, QUERY_LOGIN } from "./queries";
 import { loginSchema, registerSchema } from "./validations";
-import { signAccessToken } from "./helpers";
+import { signAccessToken, verifyAccessToken } from "./helpers";
 
 const router = express.Router();
 
@@ -68,7 +68,7 @@ router.post("/login", async (req, res, next) => {
 
     if (mt_users.length === 0) {
       throw Boom.unauthorized(
-        "Invalid credentials: Please check your email and password input and try again!"
+        "Invalid credentials: Please check your email / password input and try again!"
       );
     }
 
@@ -78,7 +78,7 @@ router.post("/login", async (req, res, next) => {
 
     if (passwordIsMatch) {
       throw Boom.unauthorized(
-        "bbbbbbInvalid credentials: Please check your email and password input and try again!"
+        "bbbbbbInvalid credentials: Please check your email / password input and try again!"
       );
     }
 
@@ -87,6 +87,13 @@ router.post("/login", async (req, res, next) => {
   } catch (error) {
     return next(Boom.badRequest(error));
   }
+});
+
+router.post("/me", verifyAccessToken, (req, res, next) => {
+  const { aud } = req.payload;
+  return res.json({
+    user_id: aud,
+  });
 });
 
 export default router;
