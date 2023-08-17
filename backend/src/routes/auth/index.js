@@ -2,8 +2,8 @@ import express from "express";
 import Boom from "@hapi/boom";
 import bcrypt from "bcryptjs";
 import Hasura from "../../clients/hasura";
-import { IS_USER_EXIST, MUTATION_INSERT_USER } from "./queries";
-import { registerSchema } from "./validations";
+import { IS_USER_EXIST, MUTATION_INSERT_USER, QUERY_LOGIN } from "./queries";
+import { loginSchema, registerSchema } from "./validations";
 import { signAccessToken } from "./helpers";
 
 const router = express.Router();
@@ -49,6 +49,41 @@ router.post("/register", async (req, res, next) => {
     const accessToken = await signAccessToken(user);
 
     res.json({ accessToken });
+  } catch (error) {
+    return next(Boom.badRequest(error));
+  }
+});
+
+router.post("/login", async (req, res, next) => {
+  const input = req.body.input.data;
+  input.email = input.email.toLowerCase();
+
+  const { error } = loginSchema.validate(input);
+  if (error) return next(Boom.badRequest(error.details[0].message));
+
+  try {
+    const { mt_users } = await Hasura.request(QUERY_LOGIN, {
+      email: input.email,
+    });
+
+    if (mt_users.length === 0) {
+      throw Boom.unauthorized(
+        "Invalid credentials: Please check your email and password input and try again!"
+      );
+    }
+
+    const user = mt_users[0];
+
+    const passwordIsMatch = await bcrypt.compare(input.password, user.password);
+
+    if (passwordIsMatch) {
+      throw Boom.unauthorized(
+        "bbbbbbInvalid credentials: Please check your email and password input and try again!"
+      );
+    }
+
+    const accessToken = await signAccessToken(user);
+    return res.json({ accessToken });
   } catch (error) {
     return next(Boom.badRequest(error));
   }
