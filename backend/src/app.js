@@ -2,6 +2,7 @@ import express from "express";
 import dotenv from "dotenv";
 import Boom from "@hapi/boom";
 import auth from "./routes/auth";
+import webhooks from "./routes/webhooks";
 
 dotenv.config();
 const app = express();
@@ -9,7 +10,9 @@ const app = express();
 // middlewares
 app.use(express.json());
 
+// midd routes
 app.use("/auth", auth);
+app.use("/webhooks", webhooks);
 
 app.use((req, res, next) => {
   return next(Boom.notFound("Not found!"));
